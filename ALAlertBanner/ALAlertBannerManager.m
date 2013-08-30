@@ -56,6 +56,8 @@
 @property (nonatomic) dispatch_semaphore_t topPositionSemaphore;
 @property (nonatomic) dispatch_semaphore_t bottomPositionSemaphore;
 @property (nonatomic) dispatch_semaphore_t navBarPositionSemaphore;
+@property (nonatomic) dispatch_semaphore_t statusBarPositionSemaphore;
+@property (nonatomic) dispatch_semaphore_t topWindowSemaphore;
 @property (nonatomic, strong) NSMutableArray *bannerViews;
 
 -(void)didRotate:(NSNotification *)note;
@@ -74,18 +76,11 @@
     return sharedManager;
 }
 
+
 -(id)init
 {
     self = [super init];
     if (self) {
-        
-        //let's make sure only one animation happens at a time
-        _topPositionSemaphore = dispatch_semaphore_create(0);
-        dispatch_semaphore_signal(_topPositionSemaphore);
-        _bottomPositionSemaphore = dispatch_semaphore_create(0);
-        dispatch_semaphore_signal(_bottomPositionSemaphore);
-        _navBarPositionSemaphore = dispatch_semaphore_create(0);
-        dispatch_semaphore_signal(_navBarPositionSemaphore);
         
         _bannerViews = [NSMutableArray new];
         
@@ -101,6 +96,52 @@
     }
     return self;
 }
+
+-(dispatch_semaphore_t)topPositionSemaphore
+{
+    if (_topWindowSemaphore == nil) {
+        _topPositionSemaphore = dispatch_semaphore_create(0);
+        dispatch_semaphore_signal(_topPositionSemaphore);
+    }
+    return _topWindowSemaphore;
+}
+
+-(dispatch_semaphore_t)bottomPositionSemaphore
+{
+    if (_bottomPositionSemaphore == nil) {
+        _bottomPositionSemaphore = dispatch_semaphore_create(0);
+        dispatch_semaphore_signal(_bottomPositionSemaphore);
+    }
+    return _bottomPositionSemaphore;
+}
+
+-(dispatch_semaphore_t)navBarPositionSemaphore
+{
+    if (_navBarPositionSemaphore == nil) {
+        _navBarPositionSemaphore = dispatch_semaphore_create(0);
+        dispatch_semaphore_signal(_navBarPositionSemaphore);
+    }
+    return _navBarPositionSemaphore;
+}
+
+-(dispatch_semaphore_t)statusBarPositionSemaphore
+{
+    if (_statusBarPositionSemaphore == nil) {
+        _statusBarPositionSemaphore = dispatch_semaphore_create(0);
+        dispatch_semaphore_signal(_statusBarPositionSemaphore);
+    }
+    return _statusBarPositionSemaphore;
+}
+
+-(dispatch_semaphore_t)topWindowSemaphore
+{
+    if (_topWindowSemaphore == nil) {
+        _topWindowSemaphore = dispatch_semaphore_create(0);
+        dispatch_semaphore_signal(_topWindowSemaphore);
+    }
+    return _topWindowSemaphore;
+}
+
 
 -(void)showAlertBannerInView:(UIView *)view style:(ALAlertBannerStyle)style position:(ALAlertBannerPosition)position title:(NSString *)title subtitle:(NSString *)subtitle
 {
@@ -120,10 +161,10 @@
     [self showAlertBanner:alertBanner];
 }
 
--(void)showAlertBanner:(ALAlertBannerView*)alertBanner
+- (dispatch_semaphore_t) semaphoreForPosition:(ALAlertBannerPosition)position
 {
     dispatch_semaphore_t semaphore;
-    switch (alertBanner.position) {
+    switch (position) {
         case ALAlertBannerPositionTop:
             semaphore = self.topPositionSemaphore;
             break;
@@ -133,7 +174,19 @@
         case ALAlertBannerPositionUnderNavBar:
             semaphore = self.navBarPositionSemaphore;
             break;
+        case ALAlertBannerPositionUnderStatusBar:
+            semaphore = self.statusBarPositionSemaphore;
+            break;
+        case ALAlertBannerPositionTopOfWindow:
+            semaphore = self.topWindowSemaphore;
+            break;
     }
+    return semaphore;
+}
+
+-(void)showAlertBanner:(ALAlertBannerView*)alertBanner
+{
+    dispatch_semaphore_t semaphore = [self semaphoreForPosition:alertBanner.position];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
         dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -157,18 +210,7 @@
     
     alertBanner.isScheduledToHide = YES;
     
-    dispatch_semaphore_t semaphore;
-    switch (alertBanner.position) {
-        case ALAlertBannerPositionTop:
-            semaphore = self.topPositionSemaphore;
-            break;
-        case ALAlertBannerPositionBottom:
-            semaphore = self.bottomPositionSemaphore;
-            break;
-        case ALAlertBannerPositionUnderNavBar:
-            semaphore = self.navBarPositionSemaphore;
-            break;
-    }
+   dispatch_semaphore_t semaphore = [self semaphoreForPosition:alertBanner.position];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -196,18 +238,7 @@
 
 -(void)alertBannerDidShow:(ALAlertBannerView *)alertBanner inView:(UIView *)view
 {
-    dispatch_semaphore_t semaphore;
-    switch (alertBanner.position) {
-        case ALAlertBannerPositionTop:
-            semaphore = self.topPositionSemaphore;
-            break;
-        case ALAlertBannerPositionBottom:
-            semaphore = self.bottomPositionSemaphore;
-            break;
-        case ALAlertBannerPositionUnderNavBar:
-            semaphore = self.navBarPositionSemaphore;
-            break;
-    }
+    dispatch_semaphore_t semaphore = [self semaphoreForPosition:alertBanner.position];
     dispatch_semaphore_signal(semaphore);
 }
 
@@ -239,18 +270,7 @@
 -(void)alertBannerDidHide:(ALAlertBannerView *)alertBanner inView:(UIView *)view
 {
     NSMutableArray *bannersArray = view.alertBanners;
-    dispatch_semaphore_t semaphore;
-    switch (alertBanner.position) {
-        case ALAlertBannerPositionTop:
-            semaphore = self.topPositionSemaphore;
-            break;
-        case ALAlertBannerPositionBottom:
-            semaphore = self.bottomPositionSemaphore;
-            break;
-        case ALAlertBannerPositionUnderNavBar:
-            semaphore = self.navBarPositionSemaphore;
-            break;
-    }
+    dispatch_semaphore_t semaphore = [self semaphoreForPosition:alertBanner.position];
     [bannersArray removeObject:alertBanner];
     dispatch_semaphore_signal(semaphore);
 }

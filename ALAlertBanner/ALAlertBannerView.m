@@ -254,6 +254,8 @@ static CGFloat const kRotationDurationIPad = 0.4f;
     
     if (!isSuperviewKindOfWindow && position == ALAlertBannerPositionUnderNavBar)
         [[NSException exceptionWithName:@"Bad ALAlertBannerStyle For View Type" reason:@"ALAlertBannerPositionUnderNavBar should only be used if you are presenting the alert banner on the AppDelegate window. Use ALAlertBannerPositionTop or ALAlertBannerPositionBottom for normal UIViews" userInfo:nil] raise];
+    if (!isSuperviewKindOfWindow && position == ALAlertBannerPositionUnderStatusBar)
+    [[NSException exceptionWithName:@"Bad ALAlertBannerStyle For View Type" reason:@"ALAlertBannerPositionUnderStatusBar should only be used if you are presenting the alert banner on the AppDelegate window. Use ALAlertBannerPositionTop or ALAlertBannerPositionBottom for normal UIViews" userInfo:nil] raise];
     
     alertBanner.titleLabel.text = title;
     alertBanner.subtitleLabel.text = subtitle;
@@ -289,7 +291,7 @@ static CGFloat const kRotationDurationIPad = 0.4f;
     double delayInSeconds = self.fadeInDuration;
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
     dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-        if (self.position == ALAlertBannerPositionUnderNavBar)
+        if ((self.position == ALAlertBannerPositionUnderNavBar) || (self.position == ALAlertBannerPositionUnderStatusBar))
         {
             //animate mask
             CGPoint currentPoint = self.layer.mask.position;
@@ -311,6 +313,8 @@ static CGFloat const kRotationDurationIPad = 0.4f;
         switch (self.position) {
             case ALAlertBannerPositionTop:
             case ALAlertBannerPositionUnderNavBar:
+            case ALAlertBannerPositionUnderStatusBar:
+            case ALAlertBannerPositionTopOfWindow:
                 yCoord += self.frame.size.height;
                 break;
             case ALAlertBannerPositionBottom:
@@ -343,7 +347,7 @@ static CGFloat const kRotationDurationIPad = 0.4f;
     
     self.state = ALAlertBannerStateHiding;
     
-    if (self.position == ALAlertBannerPositionUnderNavBar)
+    if ((self.position == ALAlertBannerPositionUnderNavBar) || (self.position == ALAlertBannerPositionUnderStatusBar))
     {
         CGPoint currentPoint = self.layer.mask.position;
         CGPoint newPoint = CGPointZero;
@@ -364,6 +368,8 @@ static CGFloat const kRotationDurationIPad = 0.4f;
     switch (self.position) {
         case ALAlertBannerPositionTop:
         case ALAlertBannerPositionUnderNavBar:
+        case ALAlertBannerPositionUnderStatusBar:
+        case ALAlertBannerPositionTopOfWindow:
             yCoord -= self.frame.size.height;
             break;
         case ALAlertBannerPositionBottom:
@@ -486,12 +492,18 @@ static CGFloat const kRotationDurationIPad = 0.4f;
         case ALAlertBannerPositionUnderNavBar:
             initialYCoord = -heightForSelf + [UIApplication navigationBarHeight] + kStatusBarHeight;
             break;
+        case ALAlertBannerPositionUnderStatusBar:
+            initialYCoord = -heightForSelf + kStatusBarHeight;
+            break;
+        case ALAlertBannerPositionTopOfWindow:
+            initialYCoord = -heightForSelf;
+            break;
     }
     frame.origin.y = initialYCoord;
     self.frame = frame;
     
     //if position is under the nav bar, add a mask
-    if (self.position == ALAlertBannerPositionUnderNavBar)
+    if ((self.position == ALAlertBannerPositionUnderNavBar) && (self.position == ALAlertBannerPositionUnderStatusBar))
     {
         CAShapeLayer *maskLayer = [[CAShapeLayer alloc] init];
         CGRect maskRect = CGRectMake(0, frame.size.height, frame.size.width, parentView.bounds.size.height); //give the mask enough height so it doesn't clip the shadow
@@ -593,6 +605,8 @@ static CGFloat const kRotationDurationIPad = 0.4f;
         switch (self.position) {
             case ALAlertBannerPositionTop:
             case ALAlertBannerPositionUnderNavBar:
+            case ALAlertBannerPositionUnderStatusBar:
+            case ALAlertBannerPositionTopOfWindow:
                 yPos -= self.layer.bounds.size.height;
                 break;
                 

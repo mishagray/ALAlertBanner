@@ -21,6 +21,8 @@ static NSString *loremIpsum[] = {
 @property (nonatomic, strong) UIButton *topButton;
 @property (nonatomic, strong) UIButton *bottomButton;
 @property (nonatomic, strong) UIButton *underNavButton;
+@property (nonatomic, strong) UIButton *underStatusButton;
+@property (nonatomic, strong) UIButton *topOfWindowButton;
 
 @property (nonatomic, strong) UISlider *secondsToShowSlider;
 @property (nonatomic, strong) UILabel *secondsToShowLabel;
@@ -64,7 +66,19 @@ static NSString *loremIpsum[] = {
     [self.underNavButton setTitle:@"Under Nav" forState:UIControlStateNormal];
     [self.underNavButton addTarget:self action:@selector(showAlertBannerInWindow:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.underNavButton];
-    
+
+    self.underStatusButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    self.underStatusButton.tag = ALAlertBannerPositionUnderStatusBar;
+    [self.underStatusButton setTitle:@"Under Status" forState:UIControlStateNormal];
+    [self.underStatusButton addTarget:self action:@selector(showAlertBannerInWindow:) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:self.underStatusButton];
+
+    self.topOfWindowButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    self.topOfWindowButton.tag = ALAlertBannerPositionUnderStatusBar;
+    [self.topOfWindowButton setTitle:@"Top of Window" forState:UIControlStateNormal];
+    [self.topOfWindowButton addTarget:self action:@selector(showAlertBannerInWindow:) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:self.topOfWindowButton];
+
     self.secondsToShowSlider = [[UISlider alloc] init];
     self.secondsToShowSlider.continuous = YES;
     self.secondsToShowSlider.minimumValue = 0.0f;
@@ -107,10 +121,15 @@ static NSString *loremIpsum[] = {
 -(void)configureView
 {
     self.topButton.frame = CGRectMake(20, self.view.frame.size.height/2 - 80.f, (self.view.frame.size.width - 40.f)/3, 40.f);
-    self.bottomButton.frame = CGRectMake(self.topButton.frame.origin.x + self.topButton.frame.size.width, self.topButton.frame.origin.y, self.topButton.frame.size.width, self.topButton.frame.size.height);
-    self.underNavButton.frame = CGRectMake(self.bottomButton.frame.origin.x + self.bottomButton.frame.size.width, self.topButton.frame.origin.y, self.topButton.frame.size.width, self.topButton.frame.size.height);
+    self.bottomButton.frame = CGRectMake(CGRectGetMaxX(self.topButton.frame), self.topButton.frame.origin.y, self.topButton.frame.size.width, self.topButton.frame.size.height);
+    self.underNavButton.frame = CGRectMake(CGRectGetMaxX(self.bottomButton.frame), self.topButton.frame.origin.y, self.topButton.frame.size.width, self.topButton.frame.size.height);
     
-    self.secondsToShowSlider.frame = CGRectMake(self.topButton.frame.origin.x, self.topButton.frame.origin.y + self.topButton.frame.size.height + 20.f, self.view.frame.size.width - 40.f, 20.f);
+    self.underStatusButton.frame = CGRectMake(self.topButton.frame.origin.x, CGRectGetMaxY(self.topButton.frame), (self.view.frame.size.width - 40.f)/2, 40.f);
+    
+    self.topOfWindowButton.frame = CGRectMake(CGRectGetMaxX(self.underStatusButton.frame), self.underStatusButton.frame.origin.y, self.underStatusButton.frame.size.width, self.underStatusButton.frame.size.height);
+    
+
+    self.secondsToShowSlider.frame = CGRectMake(self.topButton.frame.origin.x, CGRectGetMaxY(self.underStatusButton.frame) + 20.f, self.view.frame.size.width - 40.f, 20.f);
     self.secondsToShowLabel.frame = CGRectMake(self.secondsToShowSlider.frame.origin.x, self.secondsToShowSlider.frame.origin.y + self.secondsToShowSlider.frame.size.height, self.secondsToShowSlider.frame.size.width, 20.f);
     self.animationDurationSlider.frame = CGRectMake(self.secondsToShowSlider.frame.origin.x, self.secondsToShowLabel.frame.origin.y + self.secondsToShowLabel.frame.size.height + 20.f, self.view.frame.size.width - 40.f, 20.f);
     self.animationDurationLabel.frame = CGRectMake(self.animationDurationSlider.frame.origin.x, self.animationDurationSlider.frame.origin.y + self.animationDurationSlider.frame.size.height, self.animationDurationSlider.frame.size.width, 20.f);

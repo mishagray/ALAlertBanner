@@ -51,6 +51,8 @@ typedef enum {
     ALAlertBannerPositionTop = 0,
     ALAlertBannerPositionBottom,
     ALAlertBannerPositionUnderNavBar,
+    ALAlertBannerPositionUnderStatusBar,
+    ALAlertBannerPositionTopOfWindow,
 } ALAlertBannerPosition;
 
 typedef enum {
